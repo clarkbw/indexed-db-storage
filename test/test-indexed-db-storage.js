@@ -371,8 +371,8 @@ exports['test objectstore add remove'] = function (assert, done) {
     db.createObjectStore(storeName, options).then(function (store) {
       store.add(obj).then(function (key) {
         store.remove(key).then(function (ret) {
-          assert.equal(JSON.stringify(ret), JSON.stringify(key),
-                       "key returned is the same");
+          assert.equal(ret, undefined,
+                       "entry is not coming back as undefined");
           var request = indexedDB.open(dbName, db.version);
           request.onsuccess = function (event) {
             var result = event.target.result;

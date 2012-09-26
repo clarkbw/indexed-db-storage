@@ -24,7 +24,7 @@ DatabaseFactory.open('foo').then(function (db) {
 ```
 
 #### deleteDatabase(`name`)
-deleteDatabase requires a `name` parameter and will 
+deleteDatabase requires a `name` parameter and will close and delete the database from the system.
 
 example:
 
@@ -46,7 +46,10 @@ Name given to the `Database` when it was opened.
 Current version of the `Database`.
 
 #### `objectStoreNames`
-Array of Strings that represent the names of the `ObjectStore`s this `Database` holds.
+Array of Strings that represent the names of the `ObjectStore` objects in this `Database`.
+
+#### `objectStores`
+A hash of the `ObjectStore` objects in this `Database`
 
 ### Functions
 
@@ -126,7 +129,7 @@ DatabaseFactory.deleteDatabase('foo').then(function (db) {
 ```
 
 #### all()
-This function returns all the objects stored in this `ObjectStore` as an array.
+This function returns all the objects stored in this `ObjectStore` as an Array.
 
 example:
 
@@ -151,8 +154,8 @@ example:
 DatabaseFactory.deleteDatabase('foo').then(function (db) {
    db.createObjectStore('store').then(function (store) {
       store.add({ "save" : "this" }).then(function (key) {
-         store.remove(key).then(function (rkey) {
-          console.log('deleted the object stored under the key: " + rkey);
+         store.remove(key).then(function (item) { // item will be undefined
+          console.log('object stored under the key: " + key + " is now " + item);
          });
       });
    });
