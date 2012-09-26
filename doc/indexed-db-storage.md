@@ -99,13 +99,13 @@ The `obj` parameter is required and the `key` parameter is optional if your `Obj
 example:
 
 ```
-DatabaseFactory.deleteDatabase('foo').then(function (db) { 
+DatabaseFactory.deleteDatabase('foo').then(function (db) {
    db.createObjectStore('store').then(function (store) {
       store.add({ 'mad' : 'men' }).then(function (key) {
          console.log('our object was stored with the key " + key);
       });
    });
-}); 
+});
 ```
 
 #### get(`key`)
@@ -116,13 +116,13 @@ This function returns the object associated with the parameter `key` otherwise i
 example:
 
 ```
-DatabaseFactory.deleteDatabase('foo').then(function (db) { 
+DatabaseFactory.deleteDatabase('foo').then(function (db) {
    db.createObjectStore('store').then(function (store) {
       store.get(1).then(function (obj) {
          console.log('the object at key 1 is: " + obj);
       });
    });
-}); 
+});
 ```
 
 #### all()
@@ -131,17 +131,30 @@ This function returns all the objects stored in this `ObjectStore` as an array.
 example:
 
 ```
-DatabaseFactory.deleteDatabase('foo').then(function (db) { 
+DatabaseFactory.deleteDatabase('foo').then(function (db) {
    db.createObjectStore('store').then(function (store) {
       store.all().then(function (objs) {
          console.log('all the objects in the store are: " + objs.join(","));
       });
    });
-}); 
+});
 ```
 
-#### exists(`key`)
-stub
-
 #### remove(`key`)
-stub
+The `key` parameter is required.
+
+This function removes the object associated with the parameter `key`.
+
+example:
+
+```
+DatabaseFactory.deleteDatabase('foo').then(function (db) {
+   db.createObjectStore('store').then(function (store) {
+      store.add({ "save" : "this" }).then(function (key) {
+         store.remove(key).then(function (rkey) {
+          console.log('deleted the object stored under the key: " + rkey);
+         });
+      });
+   });
+});
+```

@@ -358,6 +358,45 @@ exports['test objectstore all empty'] = function (assert, done) {
   });
 };
 
+exports['test objectstore add remove'] = function (assert, done) {
+  var dbName = "test13",
+      storeName = "store13",
+      obj = { "save" : "stuff" },
+      options = { autoIncrement : true };
+  var failWithError = function (error) {
+    assert.fail(error);
+    done();
+  };
+  DatabaseFactory.open(dbName).then(function (db) {
+    db.createObjectStore(storeName, options).then(function (store) {
+      store.add(obj).then(function (key) {
+        store.remove(key).then(function (ret) {
+          assert.equal(JSON.stringify(ret), JSON.stringify(key),
+                       "key returned is the same");
+          var request = indexedDB.open(dbName, db.version);
+          request.onsuccess = function (event) {
+            var result = event.target.result;
+            var r = result.transaction(storeName)
+                          .objectStore(storeName).get(key);
+            r.onsuccess = function (event) {
+              assert.equal(event.target.result, undefined,
+                           "result should be undefined");
+              done();
+            };
+          };
+          request.onerror = function (event) {
+            console.log("error", event);
+            assert.fail('failed to open db');
+          };
+          request.addEventListener("upgradeneeded", function (event) {
+            assert.fail('no upgrade should be needed in this test');
+          });
+        }, failWithError);
+      }, failWithError);
+    }, failWithError);
+  });
+};
+
 /*exports['test if key exists'] = function (assert, done) {
   var dbName = "test5",
       storeName = "store5",
