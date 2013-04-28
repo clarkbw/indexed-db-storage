@@ -10,7 +10,7 @@
 'use strict';
 
 var DatabaseFactory = require("indexed-db-storage").DatabaseFactory;
-var indexedDB = require('indexed-db').indexedDB;
+var indexedDB = require('./indexed-db').indexedDB;
 
 exports['test opendb'] = function (assert, done) {
   var dbName = "test1";
