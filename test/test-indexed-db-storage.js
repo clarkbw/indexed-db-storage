@@ -34,6 +34,7 @@ exports['test opendb'] = function (assert, done) {
       assert.pass('db exists');
       assert.equal(db._name(event.target.result.name), db.name,
                    "db name is not the same");
+      event.target.result.close();
       done();
     };
     request.onerror = function (event) {
@@ -59,6 +60,7 @@ exports['test deletedb'] = function (assert, done) {
       };
       request.addEventListener("upgradeneeded", function (event) {
         assert.pass('upgrade needed because this db did not exist before');
+        event.target.result.close();
         done();
       });
       request.onerror = function (event) {
@@ -84,6 +86,7 @@ exports['test open and create store'] = function (assert, done) {
                   "We have the object store");
         assert.equal(db._name(event.target.result.name), db.name,
                      "db names are unequal");
+        event.target.result.close();
         done();
       };
       request.onerror = function (event) {
@@ -114,6 +117,7 @@ exports['test reopen and recreate store'] = function (assert, done) {
                   "We have the object store");
         assert.equal(db._name(event.target.result.name), db.name,
                      "db names are unequal");
+        event.target.result.close();
         done();
       };
       request.onerror = function (event) {
@@ -202,6 +206,7 @@ exports['test objectstore autoincrement add'] = function (assert, done) {
             assert.equal(JSON.stringify(event.target.result),
                          JSON.stringify(obj),
                          "object added is not the same as the returned result");
+            result.close();
             done();
           };
         };
@@ -237,6 +242,7 @@ exports['test objectstore keyPath add'] = function (assert, done) {
             assert.equal(JSON.stringify(event.target.result),
                          JSON.stringify(obj),
                          "object added is not the same as the returned result");
+            result.close();
             done();
           };
         };
@@ -259,6 +265,7 @@ exports['test objectstore manual key add'] = function (assert, done) {
       options = { autoIncrement : false };
   var failWithError = function (error) {
     assert.fail(error);
+    console.error(error);
     done();
   };
   DatabaseFactory.open(dbName).then(function (db) {
@@ -273,6 +280,7 @@ exports['test objectstore manual key add'] = function (assert, done) {
             assert.equal(JSON.stringify(event.target.result),
                          JSON.stringify(obj),
                          "object added is not the same as the returned result");
+            result.close();
             done();
           };
         };
@@ -394,6 +402,7 @@ exports['test objectstore add remove'] = function (assert, done) {
             r.onsuccess = function (event) {
               assert.equal(event.target.result, undefined,
                            "result should be undefined");
+              result.close();
               done();
             };
           };
@@ -426,6 +435,7 @@ exports['test create index'] = function (assert, done) {
         //console.log("stores", store.objectStoreNames, db.objectStoreNames);
         //console.log("names:", store.name, db.name);
         //console.log("versions: ", store.version, db.version);
+        assert.equal(store.indexNames[0], indexName, "index names not equal");
         var request = indexedDB.open(dbName, db.version);
         request.onsuccess = function (event) {
           var result = event.target.result;
@@ -433,6 +443,7 @@ exports['test create index'] = function (assert, done) {
           assert.ok(index !== null, "index does not exist");
           assert.equal(index.name, indexName, 'index does not have the correct name');
           assert.equal(index.keyPath, indexKeyPath, 'index does not have the correct keyPath');
+          event.target.result.close();
           done();
         };
         request.onerror = function (event) {
@@ -442,6 +453,37 @@ exports['test create index'] = function (assert, done) {
           assert.fail('no upgrade should be needed in this test');
         });
       });
+    }, failWithError);
+  }, failWithError);
+};
+
+exports['test000 double open and create store'] = function (assert, done) {
+  var dbName = "test3",
+      storeName1 = "store10",
+      storeName2 = "store20";
+  var failWithError = function (error) {
+    assert.fail(error);
+    done();
+  };
+  DatabaseFactory.open(dbName).then(function (db) {
+    db.createObjectStore(storeName1).then(function (store1) {
+      db.createObjectStore(storeName2).then(function (store2) {
+        var request = indexedDB.open(db.name, db.version);
+        request.onsuccess = function (event) {
+          assert.ok(event.target.result.objectStoreNames.contains(storeName1),
+                    "We have the first object store");
+          assert.ok(event.target.result.objectStoreNames.contains(storeName2),
+                    "We have the second object store");
+          event.target.result.close();
+          done();
+        };
+        request.onerror = function (event) {
+          assert.fail('failed to open db');
+        };
+        request.addEventListener("upgradeneeded", function (event) {
+          assert.fail('no upgrade should be needed');
+        });
+      }, failWithError);
     }, failWithError);
   }, failWithError);
 };
