@@ -1,10 +1,10 @@
 {
     "name": "indexed-db-storage", 
     "license": "MPL 2.0", 
-    "author": "Bryan Clark", 
+    "author": "Bryan Clark (http://clarkbw.net/) <clarkbw@gmail.com>",
     "version": "0.1", 
     "fullName": "IndexedDB Storage Promise API", 
     "id": "jid1-11ORdlqucIDuBA", 
-    "description": "Promise base API for add-ons to use IndexedDB",
+    "description": "Promise base API for Mozilla SDK add-ons to use IndexedDB",
     "main" : "indexed-db-storage"
 }
