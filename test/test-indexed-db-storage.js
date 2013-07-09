@@ -232,7 +232,7 @@ exports['test objectstore keyPath add'] = function (assert, done) {
   };
   DatabaseFactory.open(dbName).then(function (db) {
     db.createObjectStore(storeName, options).then(function (store) {
-      store.add(obj).then(function (key) {
+      store.add(obj, "key").then(function (key) {
         var request = indexedDB.open(dbName, db.version);
         request.onsuccess = function (event) {
           var result = event.target.result;
