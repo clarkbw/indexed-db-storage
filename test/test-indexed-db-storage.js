@@ -9,14 +9,8 @@
 
 'use strict';
 
-var DatabaseFactory = require("indexed-db-storage").DatabaseFactory;
-var indexedDB = require('./indexed-db').indexedDB;
-
-// https://mxr.mozilla.org/
-// mozilla-central/source/dom/indexedDB/IDBDatabase.cpp#606
-var READ_ONLY = "readonly";
-var READ_WRITE = "readwrite";
-var VERSION_CHANGE = "versionchange";
+const { DatabaseFactory, READ_ONLY, READ_WRITE, VERSION_CHANGE } = require("indexed-db-storage");
+const { indexedDB } = require('./indexed-db');
 
 exports['test opendb'] = function (assert, done) {
   var dbName = "test1";
