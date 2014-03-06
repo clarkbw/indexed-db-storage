@@ -312,7 +312,7 @@ exports['test objectstore keyPath add.error'] = function (assert, done) {
   });
 };
 
-exports['test objectstore add and get'] = function (assert, done) {
+exports['test objectstore add and get and clear'] = function (assert, done) {
   var dbName = "test10",
       storeName = "store10",
       obj = { "save" : "stuff" },
@@ -327,7 +327,14 @@ exports['test objectstore add and get'] = function (assert, done) {
         store.get(key).then(function (ret) {
           assert.equal(JSON.stringify(ret), JSON.stringify(obj),
                        "returned object doesn't equal what we added");
-          done();
+          store.clear().then(function () {
+            store.all().then(function (ret) {
+              assert.ok(Array.isArray(ret), "we didn't get back an array");
+              assert.equal(ret.length, 0,
+                           "returned object isn't empty");
+              done();
+            }, failWithError);
+          }, failWithError);
         }, failWithError);
       }, failWithError);
     }, failWithError);
