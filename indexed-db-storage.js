@@ -5,8 +5,6 @@
 /* jshint strict: true, esnext: true, newcap: false, globalstrict: true,
    devel: true, node: true */
 
-/*global */
-
 "use strict";
 
 const { IDBTransaction, IDBVersionChangeEvent } = require('./indexed-db');
@@ -16,7 +14,7 @@ const { on, once, off, emit } = require('sdk/event/core');
 const { Collection } = require("sdk/util/collection");
 const { Class } = require('sdk/core/heritage');
 const { when: unload, ensure } = require('sdk/system/unload');
-const { defer, promised } = require('sdk/core/promise');
+const { defer } = require('sdk/core/promise');
 const { validateOptions } = require('sdk/deprecated/api-utils');
 
 const namespace = require('sdk/core/namespace').ns();
@@ -348,10 +346,6 @@ var Database = Class({
       }
     }, this);
   },
-  // until Bug 786688 is fixed we're going to get weird names
-  _name : function _name(name) {
-    return name.replace(id + ":", "");
-  },
   get db() {
     return namespace(this).db;
   },
@@ -362,7 +356,7 @@ var Database = Class({
     namespace(this).db = db;
   },
   get name() {
-    return (this.db) ? this._name(this.db.name) : null;
+    return (this.db) ? this.db.name : null;
   },
   get version() { return (this.db) ? this.db.version : 1; },
   get objectStoreNames() {
