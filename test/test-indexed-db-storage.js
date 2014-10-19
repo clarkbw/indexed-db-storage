@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*jshint forin:true, noarg:true, noempty:true, eqeqeq:true, bitwise:true,
-  strict:true, undef:true, curly:true, browser:false, es5:true,
-  indent:2, maxerr:50, devel:true, node:true, boss:true, white:true,
-  globalstrict:true, nomen:false, newcap:true, esnext: true */
+/* jshint strict: true, esnext: true, newcap: false, globalstrict: true,
+   devel: true, node: true */
 
 'use strict';
 
-const { DatabaseFactory, READ_ONLY, READ_WRITE, VERSION_CHANGE } = require("../lib/indexed-db-storage");
-const { indexedDB } = require('sdk/indexed-db');
+const { DatabaseFactory, READ_ONLY, READ_WRITE, VERSION_CHANGE } = require("../indexed-db-storage");
+const { indexedDB, DOMException, IDBKeyRange } = require('sdk/indexed-db');
 
 exports['test opendb'] = function (assert, done) {
   var dbName = "test1";
@@ -26,7 +24,7 @@ exports['test opendb'] = function (assert, done) {
     var request = indexedDB.open(db.name, db.version);
     request.onsuccess = function (event) {
       assert.pass('db exists');
-      assert.equal(db._name(event.target.result.name), db.name,
+      assert.equal(event.target.result.name, db.name,
                    "db name is not the same");
       event.target.result.close();
       done();
@@ -78,7 +76,7 @@ exports['test open and create store'] = function (assert, done) {
         assert.pass('db exists');
         assert.ok(event.target.result.objectStoreNames.contains(storeName),
                   "We have the object store");
-        assert.equal(db._name(event.target.result.name), db.name,
+        assert.equal(event.target.result.name, db.name,
                      "db names are unequal");
         event.target.result.close();
         done();
@@ -109,7 +107,7 @@ exports['test reopen and recreate store'] = function (assert, done) {
         assert.pass('db exists');
         assert.ok(event.target.result.objectStoreNames.contains(storeName),
                   "We have the object store");
-        assert.equal(db._name(event.target.result.name), db.name,
+        assert.equal(event.target.result.name, db.name,
                      "db names are unequal");
         event.target.result.close();
         done();
