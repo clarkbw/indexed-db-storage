@@ -419,36 +419,36 @@ exports['test objectstore add remove'] = function (assert, done) {
 };
 
 exports['test create index'] = function (assert, done) {
-  var dbName = "test14",
+  let dbName = "test14",
       storeName = "store1",
       indexName = "index1",
       indexKeyPath = "value",
       options = {};
-  var failWithError = function (error) {
+  let failWithError = (error) => {
     assert.fail(error);
     done();
   };
   DatabaseFactory.open(dbName).then(function (db) {
     db.createObjectStore(storeName).then(function (store) {
       store.createIndex(indexName, indexKeyPath, options).then(function (index) {
-        //console.log("stores", store.objectStoreNames, db.objectStoreNames);
-        //console.log("names:", store.name, db.name);
-        //console.log("versions: ", store.version, db.version);
-        assert.equal(store.indexNames[0], indexName, "index names not equal");
-        var request = indexedDB.open(dbName, db.version);
-        request.onsuccess = function (event) {
-          var result = event.target.result;
-          var index = result.transaction(storeName, READ_ONLY).objectStore(storeName).index(indexName);
-          assert.ok(index !== null, "index does not exist");
-          assert.equal(index.name, indexName, 'index does not have the correct name');
-          assert.equal(index.keyPath, indexKeyPath, 'index does not have the correct keyPath');
-          event.target.result.close();
+        // console.log("index", index);
+        // console.log("stores", store.indexNames, db.objectStoreNames);
+        // console.log("names:", store.name, db.name);
+        // console.log("versions: ", store.version, db.version);
+        let request = indexedDB.open(dbName, db.version);
+        request.onsuccess = ({ target }) => {
+          let result = target.result;
+          let storeIndex = result.transaction(storeName, READ_ONLY).objectStore(storeName).index(indexName);
+          assert.ok(storeIndex !== null, "index does not exist");
+          assert.equal(storeIndex.name, indexName, 'index does not have the correct name');
+          assert.equal(storeIndex.keyPath, indexKeyPath, 'index does not have the correct keyPath');
+          result.close();
           done();
         };
-        request.onerror = function (event) {
+        request.onerror = () => {
           assert.fail('failed to open db');
         };
-        request.addEventListener("upgradeneeded", function (event) {
+        request.addEventListener("upgradeneeded", () => {
           assert.fail('no upgrade should be needed in this test');
         });
       });

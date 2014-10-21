@@ -363,9 +363,9 @@ var Database = Class({
     return (this.db) ? Array.slice(this.db.objectStoreNames) : [];
   },
   createObjectStore : function createObjectStore(name, options) {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var request = null,
+    let request = null,
         version = this.version + 1;
 
     try {
@@ -387,11 +387,11 @@ var Database = Class({
     request.addEventListener("blocked", event => {
       reject(this);
     });
-    request.addEventListener("success", event => {
+    request.addEventListener("success", ({ target }) => {
       try {
-        this.db = event.target.result;
-        var store = this.db.transaction(name, READ_ONLY).objectStore(name);
-        var objectstore = new ObjectStore(store, this);
+        this.db = target.result;
+        let store = this.db.transaction(name, READ_ONLY).objectStore(name);
+        let objectstore = new ObjectStore(store, this);
         this.objectStores[name] = objectstore;
         emit(this, "objectstore:added", objectstore);
         resolve(objectstore);
@@ -402,11 +402,12 @@ var Database = Class({
     request.addEventListener("error", event => {
       reject(this);
     });
-    request.addEventListener("upgradeneeded", event => {
+    request.addEventListener("upgradeneeded", ({ target } )=> {
       // createObjectStore can raise a DOMException
       try {
+        let db = target.result;
         // Create the object store
-        this.db.createObjectStore(name, options);
+        db.createObjectStore(name, options);
       } catch (e) {
         // ConstraintError means the db already exists
         if (e.name === "ConstraintError") {
@@ -429,9 +430,9 @@ var Database = Class({
                           });
   },
   _createIndex : function _createIndex(store, name, keyPath, options) {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var request = null,
+    let request = null,
         version = this.version + 1,
         success = false;
 
@@ -445,28 +446,33 @@ var Database = Class({
     this.close();
     request = indexedDB.open(this.name, version);
 
-    request.addEventListener("blocked", reject);
-    request.addEventListener("success", event => {
+    request.addEventListener("blocked", event => {
+      reject(this);
+    });
+    request.addEventListener("success", ({ target } )=> {
       if (success) {
-        this.db = event.target.result;
-        var index = this.db.transaction(store.name, READ_ONLY).objectStore(store.name).index(name);
-        emit(store, "objectstore:index", index);
+        this.db = target.result;
+        let ostore = this.db.transaction(store.name, READ_ONLY).objectStore(store.name);
+        this.objectStores[store.name] = new ObjectStore(ostore, this);
+        let index = ostore.index(name);
+        emit(ostore, "objectstore:index", index);
         resolve(index);
       } else {
-        reject(event);
+        reject(this);
       }
     });
-    request.addEventListener("error", reject);
+    request.addEventListener("error", event => {
+      reject(this);
+    });
     request.addEventListener("upgradeneeded", ({ target }) => {
       // createObjectStore can raise a DOMException
-      var ostore = target.transaction.objectStore(store.name);
+      let ostore = target.transaction.objectStore(store.name);
       try {
         // Attempt to create the index
         ostore.createIndex(name, keyPath, options);
         // set our success flag to true
         success = true;
       } catch (e) {
-        console.error(id, e);
         // ConstraintError means the index already exists
         if (e.name === "ConstraintError") {
           console.log("_createIndex.ConstraintError");
