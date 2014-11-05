@@ -7,7 +7,8 @@
 
 'use strict';
 
-const { DatabaseFactory, READ_ONLY, READ_WRITE, VERSION_CHANGE } = require("../indexed-db-storage");
+const { DatabaseFactory } = require("../indexed-db-storage");
+const { READ_ONLY, READ_WRITE } = require('../db/utils');
 const { indexedDB, DOMException, IDBKeyRange } = require('sdk/indexed-db');
 
 exports['test opendb'] = function (assert, done) {
