@@ -72,17 +72,13 @@ var ObjectStore = Class({
     return namespace(this).database.db;
   },
   initialize: function initialize(store, database) {
+    EventTarget.prototype.initialize.call(this, arguments);
     namespace(this).store = store;
     namespace(this).database = database;
   },
   // adds the obj to the db with the key
   add : function add(obj, key) {
-    var { promise, resolve, reject } = defer();
-
-    var db = this._db,
-        transaction = null,
-        store = null,
-        request = null;
+    let { promise, resolve, reject } = defer();
 
     if (!this.autoIncrement && this.keyPath === null &&
         typeof key === "undefined") {
@@ -92,43 +88,32 @@ var ObjectStore = Class({
     }
 
     try {
-      transaction = db.transaction(this.name, READ_WRITE);
-      store = transaction.objectStore(this.name);
+      let transaction = this._db.transaction(this.name, READ_WRITE);
+      let store = transaction.objectStore(this.name);
 
       // the add is actually finished when this event fires
-      transaction.addEventListener("complete", event => {
+      transaction.addEventListener("complete", () => {
         emit(this, "add", obj, key);
         resolve(key);
       });
-      transaction.addEventListener("abort", event => {
-        reject(this);
-      });
-      transaction.addEventListener("error", event => {
-        reject(this);
-      });
+      transaction.addEventListener("abort", () => reject(this));
+      transaction.addEventListener("error", () => reject(this));
 
       try {
+        let request = null;
         if (this.autoIncrement || this.keyPath !== null) {
           request = store.add(obj);
         } else {
           request = store.add(obj, key);
         }
 
-        request.addEventListener("blocked", event => {
-          reject(event.target.error);
-        });
+        request.addEventListener("blocked", ({ target : { error }}) => reject(error));
         // success doesn't mean that it added until our transaction is complete
         // however we do get to capture the key used if this is an autoIncrement
         // database
-        request.addEventListener("success", event => {
-          key = event.target.result;
-        });
-        request.addEventListener("error", event => {
-          reject(event.target.error);
-        });
-        request.addEventListener("ConstrainError", event => {
-          reject(event.target.error);
-        });
+        request.addEventListener("success", ({ target : { result }}) => key = result);
+        request.addEventListener("error", ({ target : { error }}) => reject(error));
+        request.addEventListener("ConstraintError", ({ target : { error }}) => reject(error));
 
       } catch (requestException) { // request
         reject(requestException.name);
@@ -141,37 +126,25 @@ var ObjectStore = Class({
     return promise;
   },
   get : function get(key) {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var request = null,
-        db = this._db,
-        transaction = null,
-        store = null,
-        item = null;
+    let item = null;
 
     try {
-      transaction = db.transaction(this.name, READ_ONLY);
-      store = transaction.objectStore(this.name);
+      let transaction = this._db.transaction(this.name, READ_ONLY);
+      let store = transaction.objectStore(this.name);
 
-      transaction.addEventListener("complete", event => {
+      transaction.addEventListener("complete", () => {
         emit(this, "get", key, item);
         resolve(item);
       });
-      transaction.addEventListener("abort", event => {
-        reject(this);
-      });
-      transaction.addEventListener("error", event => {
-        reject(this);
-      });
+      transaction.addEventListener("abort", () => reject(this));
+      transaction.addEventListener("error", () => reject(this));
 
       try {
-        request = store.get(key);
-        request.addEventListener("success", event => {
-          item = event.target.result;
-        });
-        request.addEventListener("error", event => {
-          reject(event.target.error);
-        });
+        let request = store.get(key);
+        request.addEventListener("success", ({ target : { result }}) => item = result);
+        request.addEventListener("error", ({ target : { error }}) => reject(error));
       } catch (requestException) { // request
         reject(requestException.name);
       }
@@ -183,36 +156,23 @@ var ObjectStore = Class({
     return promise;
   },
   clear : function clear() {
-    var { promise, resolve, reject } = defer();
-
-    var request = null,
-        db = this._db,
-        transaction = null,
-        store = null;
+    let { promise, resolve, reject } = defer();
 
     try {
-      transaction = db.transaction(this.name, READ_WRITE);
-      store = transaction.objectStore(this.name);
+      let transaction = this._db.transaction(this.name, READ_WRITE);
+      let store = transaction.objectStore(this.name);
 
-      transaction.addEventListener("complete", event => {
+      transaction.addEventListener("complete", () => {
         emit(this, "cleared");
         resolve(this);
       });
-      transaction.addEventListener("abort", event => {
-        reject(this);
-      });
-      transaction.addEventListener("error", event => {
-        reject(this);
-      });
+      transaction.addEventListener("abort", () => reject(this));
+      transaction.addEventListener("error", () => reject(this));
 
       try {
-        request = store.clear();
-        request.addEventListener("success", event => {
-          resolve(this);
-        });
-        request.addEventListener("error", event => {
-          reject(event.target.error);
-        });
+        let request = store.clear();
+        request.addEventListener("success", () => resolve(this));
+        request.addEventListener("error", ({ target : { error }}) => reject(error));
       } catch (requestException) { // request
         reject(requestException.name);
       }
@@ -224,42 +184,31 @@ var ObjectStore = Class({
     return promise;
   },
   all : function all() {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var request = null,
-        reserved = "continue",
-        items = [],
-        db = this._db,
-        transaction = null,
-        store = null;
+    let reserved = "continue",
+        items = [];
 
     try {
-      transaction = db.transaction(this.name, READ_ONLY);
-      store = transaction.objectStore(this.name);
+      let transaction = this._db.transaction(this.name, READ_ONLY);
+      let store = transaction.objectStore(this.name);
 
-      transaction.addEventListener("complete", event => {
+      transaction.addEventListener("complete", () => {
         emit(this, "all", items);
         resolve(items);
       });
-      transaction.addEventListener("abort", event => {
-        reject(this);
-      });
-      transaction.addEventListener("error", event => {
-        reject(this);
-      });
+      transaction.addEventListener("abort", () => reject(this));
+      transaction.addEventListener("error", () => reject(this));
 
       try {
-        request = store.openCursor();
-        request.addEventListener("success", event => {
-          var cursor = event.target.result;
+        let request = store.openCursor();
+        request.addEventListener("success", ({ target : { result : cursor }}) => {
           if (cursor) {
             items.push(cursor.value);
             cursor[reserved]();
           }
         });
-        request.addEventListener("error", event => {
-          reject(event.target.error);
-        });
+        request.addEventListener("error", ({ target : { error }}) => reject(error));
       } catch (requestException) { // request
         reject(requestException.name);
       }
@@ -272,38 +221,26 @@ var ObjectStore = Class({
   },
 
   remove : function remove(key) {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var reserved = "delete",
-        request = null,
-        item = null,
-        db = this._db,
-        transaction = null,
-        store = null;
+    let reserved = "delete",
+        item = null;
 
     try {
-      transaction = db.transaction(this.name, READ_WRITE);
-      store = transaction.objectStore(this.name);
+      let transaction = this._db.transaction(this.name, READ_WRITE);
+      let store = transaction.objectStore(this.name);
 
-      transaction.addEventListener("complete", event => {
+      transaction.addEventListener("complete", () => {
         emit(this, "remove", key, item);
         resolve(item);
       });
-      transaction.addEventListener("abort", event => {
-        reject(this);
-      });
-      transaction.addEventListener("error", event => {
-        reject(this);
-      });
+      transaction.addEventListener("abort", () => reject(this));
+      transaction.addEventListener("error", () => reject(this));
 
       try {
-        request = store[reserved](key);
-        request.addEventListener("success", event => {
-          item = event.target.result;
-        });
-        request.addEventListener("error", event => {
-          reject(event.target.error);
-        });
+        let request = store[reserved](key);
+        request.addEventListener("success", ({ target : { result }}) => item = result);
+        request.addEventListener("error", ({ target : { error }}) => reject(error));
       } catch (requestException) { // request
         reject(requestException.name);
       }
@@ -331,20 +268,20 @@ var Database = Class({
   extends : EventTarget,
   type: 'IDBDatabase',
   initialize: function initialize(db) {
+    EventTarget.prototype.initialize.call(this, arguments);
     namespace(this).db = db;
     this._initializeObjectStores();
   },
   _initializeObjectStores : function _initializeObjectStores() {
     this.objectStores = {};
-    this.objectStoreNames.forEach(function (name) {
-      var store = null;
+    this.objectStoreNames.forEach((name) => {
       try {
-        store = this.db.transaction(name, READ_ONLY).objectStore(name);
+        let store = this.db.transaction(name, READ_ONLY).objectStore(name);
         this.objectStores[name] = new ObjectStore(store, this);
       } catch (e) {
-        console.error(this.type, e);
+        console.log("error", this.type, e);
       }
-    }, this);
+    });
   },
   get db() {
     return namespace(this).db;
@@ -365,8 +302,7 @@ var Database = Class({
   createObjectStore : function createObjectStore(name, options) {
     let { promise, resolve, reject } = defer();
 
-    let request = null,
-        version = this.version + 1;
+    let version = this.version + 1;
 
     try {
       options = this._validateObjectStore(options);
@@ -382,14 +318,12 @@ var Database = Class({
     }
 
     this.close();
-    request = indexedDB.open(this.name, version);
+    let request = indexedDB.open(this.name, version);
 
-    request.addEventListener("blocked", event => {
-      reject(this);
-    });
-    request.addEventListener("success", ({ target }) => {
+    request.addEventListener("blocked", () => reject(this));
+    request.addEventListener("success", ({ target : { result : db }}) => {
       try {
-        this.db = target.result;
+        this.db = db;
         let store = this.db.transaction(name, READ_ONLY).objectStore(name);
         let objectstore = new ObjectStore(store, this);
         this.objectStores[name] = objectstore;
@@ -399,13 +333,10 @@ var Database = Class({
         reject(e);
       }
     });
-    request.addEventListener("error", event => {
-      reject(this);
-    });
-    request.addEventListener("upgradeneeded", ({ target } )=> {
+    request.addEventListener("error", () => reject(this));
+    request.addEventListener("upgradeneeded", ({ target : { result : db }}) => {
       // createObjectStore can raise a DOMException
       try {
-        let db = target.result;
         // Create the object store
         db.createObjectStore(name, options);
       } catch (e) {
@@ -432,8 +363,7 @@ var Database = Class({
   _createIndex : function _createIndex(store, name, keyPath, options) {
     let { promise, resolve, reject } = defer();
 
-    let request = null,
-        version = this.version + 1,
+    let version = this.version + 1,
         success = false;
 
     try {
@@ -444,14 +374,12 @@ var Database = Class({
     }
 
     this.close();
-    request = indexedDB.open(this.name, version);
+    let request = indexedDB.open(this.name, version);
 
-    request.addEventListener("blocked", event => {
-      reject(this);
-    });
-    request.addEventListener("success", ({ target } )=> {
+    request.addEventListener("blocked", () => reject(this));
+    request.addEventListener("success", ({ target : { result : db }}) => {
       if (success) {
-        this.db = target.result;
+        this.db = db;
         let ostore = this.db.transaction(store.name, READ_ONLY).objectStore(store.name);
         this.objectStores[store.name] = new ObjectStore(ostore, this);
         let index = ostore.index(name);
@@ -461,9 +389,7 @@ var Database = Class({
         reject(this);
       }
     });
-    request.addEventListener("error", event => {
-      reject(this);
-    });
+    request.addEventListener("error", () => reject(this));
     request.addEventListener("upgradeneeded", ({ target }) => {
       // createObjectStore can raise a DOMException
       let ostore = target.transaction.objectStore(store.name);
@@ -507,42 +433,49 @@ var Database = Class({
 // This class maps to an IDBFactory
 // https://developer.mozilla.org/en-US/docs/IndexedDB/IDBFactory
 var DatabaseFactory = Class({
-  connections : new Collection(),
+  extends : EventTarget,
+  type: 'IDBFactory',
+  connections : new Set(),
   initialize: function initialize() {
     EventTarget.prototype.initialize.call(this, arguments);
     ensure(this);
   },
-  close : function close(db) {
-    if (!(db instanceof Database) &&
-        typeof db === "string") {
-      for (var connection in this.connections) {
-        if (connection.name === db) {
-          db = connection;
-          break;
-        }
-      }
+  _find : function _find(name) {
+    let db = null;
+    for (let item of this.connections) {
+      if (item.name === name) {
+        db = item;
+        break;
+      }      
     }
-    this.connections.remove(db);
-    db.close();
+    return db;
+  },
+  close : function close(db) {
+    if (typeof db === "string") {
+      db = this._find(db);
+    }
+    if (db !== null) {
+      this.connections.delete(db);
+      db.close();    
+    }
     return (db instanceof Database);
   },
   open : function open(name) {
-    for (var db in this.connections) {
-      if (db.name === name) {
-        var deferred = defer();
-        deferred.resolve(db);
-        return deferred.promise;
-      }
+    let deferred = defer();
+    let db = this._find(name);
+    if (db !== null) {
+      deferred.resolve(db);
+      return deferred.promise;
     }
     return this._open(name, 1);
   },
   _open : function _open(name, version) {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var request = indexedDB.open(name, version);
+    let request = indexedDB.open(name, version);
 
-    request.addEventListener("success", ({target : { result }}) => {
-      var storage = new Database(result);
+    request.addEventListener("success", ({ target : { result : db }}) => {
+      let storage = new Database(db);
       this.connections.add(storage);
       emit(this, "opened", storage);
       resolve(storage);
@@ -557,8 +490,8 @@ var DatabaseFactory = Class({
         reject(event);
       }
     });
-    request.addEventListener("upgradeneeded", ({target : { result }}) => {
-      var storage = new Database(result);
+    request.addEventListener("upgradeneeded", ({ target : { result : db }}) => {
+      let storage = new Database(db);
       this.connections.add(storage);
       emit(this, "upgraded", storage);
       resolve(storage);
@@ -566,30 +499,24 @@ var DatabaseFactory = Class({
     return promise;
   },
   deleteDatabase : function deleteDatabase(name) {
-    var { promise, resolve, reject } = defer();
+    let { promise, resolve, reject } = defer();
 
-    var found = this.close(name);
-    var request = indexedDB.deleteDatabase(name);
-    request.addEventListener("success", event => {
+    let found = this.close(name);
+    let request = indexedDB.deleteDatabase(name);
+    request.addEventListener("success", () => {
       emit(this, "deleted", name);
       resolve(this);
     });
-    request.addEventListener("error", ({target : { error }}) => {
-      reject(error);
-    });
-    request.addEventListener("blocked", ({target : { error }}) => {
-      reject(error);
-    });
+    request.addEventListener("error", ({target : { error }}) => reject(error));
+    request.addEventListener("blocked", ({target : { error }}) => reject(error));
 
     if (!found) {
       reject(name);
     }
     return promise;
   },
-  extends : EventTarget,
-  type: 'IDBFactory',
   unload : function unload() {
-    for (var db in this.connections) {
+    for (let db of this.connections) {
       this.close(db);
     }
   }
