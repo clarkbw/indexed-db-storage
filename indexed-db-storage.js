@@ -7,7 +7,6 @@
 
 "use strict";
 
-const { IDBTransaction, IDBVersionChangeEvent } = require('./indexed-db');
 const { indexedDB, DOMException, IDBKeyRange } = require('sdk/indexed-db');
 const { EventTarget } = require('sdk/event/target');
 const { on, once, off, emit } = require('sdk/event/core');
