@@ -20,35 +20,7 @@ const namespace = require('sdk/core/namespace').ns();
 
 const { id } = require('sdk/self');
 
-// https://mxr.mozilla.org/
-// mozilla-central/source/dom/indexedDB/IDBDatabase.cpp#606
-const READ_ONLY = exports.READ_ONLY = "readonly";
-const READ_WRITE = exports.READ_WRITE = "readwrite";
-const VERSION_CHANGE = exports.VERSION_CHANGE = "versionchange";
-
-function logDomError(event) {
-  console.log("_onerror", event);
-  switch (event.target.error.name) {
-  case "VersionError":
-    console.log("DOMException.VersionError");
-    break;
-  case "AbortError":
-    console.log("DOMException.AbortError");
-    break;
-  case "ConstraintError":
-    console.log("DOMException.ConstraintError");
-    break;
-  case "QuotaExceededError":
-    console.log("DOMException.QuotaExceededError");
-    break;
-  case "UnknownError":
-    console.log("DOMException.UnknownError");
-    break;
-  case "NoError":
-    console.log("DOMException.NoError");
-    break;
-  }
-}
+const { READ_ONLY, READ_WRITE, logDomError } = require('./db/utils');
 
 // This class maps to an IDBObjectStore
 // https://developer.mozilla.org/en-US/docs/IndexedDB/IDBObjectStore
