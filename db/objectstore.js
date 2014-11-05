@@ -11,7 +11,6 @@ const { EventTarget } = require('sdk/event/target');
 const { emit } = require('sdk/event/core');
 const { Class } = require('sdk/core/heritage');
 const { defer } = require('sdk/core/promise');
-const { validateOptions } = require('sdk/deprecated/api-utils');
 
 const namespace = require('sdk/core/namespace').ns();
 
