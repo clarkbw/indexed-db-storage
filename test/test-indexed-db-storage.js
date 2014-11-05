@@ -9,7 +9,7 @@
 
 const { DatabaseFactory } = require("../indexed-db-storage");
 const { READ_ONLY, READ_WRITE } = require('../db/utils');
-const { indexedDB, DOMException, IDBKeyRange } = require('sdk/indexed-db');
+const { indexedDB } = require('sdk/indexed-db');
 
 exports['test opendb'] = function (assert, done) {
   var dbName = "test1";
