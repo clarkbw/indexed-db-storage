@@ -15,6 +15,7 @@ const { ensure } = require('sdk/system/unload');
 const { defer } = require('sdk/core/promise');
 
 const { Database } = require('./db/database');
+const { VERSION_CHANGE } = require('./db/utils');
 
 // This class maps to an IDBFactory
 // https://developer.mozilla.org/en-US/docs/IndexedDB/IDBFactory
@@ -41,8 +42,8 @@ var DatabaseFactory = Class({
       db = this._find(db);
     }
     if (db !== null) {
-      this.connections.delete(db);
       db.close();    
+      this.connections.delete(db);
     }
     return (db instanceof Database);
   },
@@ -56,17 +57,34 @@ var DatabaseFactory = Class({
     return this._open(name, 1);
   },
   _open : function _open(name, version) {
+    console.log("_open", version);
     let { promise, resolve, reject } = defer();
 
+    try {
     let request = indexedDB.open(name, version);
 
     request.addEventListener("success", ({ target : { result : db }}) => {
+      console.log("SUCC", version, db.version);
       let storage = new Database(db);
       this.connections.add(storage);
       emit(this, "opened", storage);
       resolve(storage);
     });
+    // request.addEventListener("versionchange", (event) => {
+    //   console.dir(event);
+    //     console.log("VVVVVersionError", version);
+    //   if (event.target.error.name === "VersionError") {
+    //     version += 1;
+    //     emit(this, "version", name, version);
+    //     resolve(this._open(name, version));
+    //   } else {
+    //     logDomError(event);
+    //     reject(event);
+    //   }
+    // });
     request.addEventListener("error", event => {
+      console.dir(event);
+        console.log("VersionError", version);
       if (event.target.error.name === "VersionError") {
         version += 1;
         emit(this, "version", name, version);
@@ -77,11 +95,20 @@ var DatabaseFactory = Class({
       }
     });
     request.addEventListener("upgradeneeded", ({ target : { result : db }}) => {
+      console.log("upgradeneeded", version, db.version);
+
       let storage = new Database(db);
       this.connections.add(storage);
       emit(this, "upgraded", storage);
       resolve(storage);
     });
+    } catch (e) {
+      console.log("EXCEPTION", e);
+      if (e.name == "VersionError") {
+        console.log("VVVVVVV");
+      }
+    }
+
     return promise;
   },
   deleteDatabase : function deleteDatabase(name) {

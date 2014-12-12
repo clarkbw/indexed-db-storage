@@ -11,77 +11,83 @@ const { DatabaseFactory } = require("../indexed-db-storage");
 const { READ_ONLY, READ_WRITE } = require('../db/utils');
 const { indexedDB } = require('sdk/indexed-db');
 
-exports['test opendb'] = function (assert, done) {
-  var dbName = "test1";
+let DB_NAME = "test1";
+exports['test 001 first create and open db'] = function (assert, done) {
   DatabaseFactory.once('opened', function (db) {
     assert.pass('db opened event');
-    assert.equal(dbName, db.name);
+    assert.equal(DB_NAME, db.name);
   });
   DatabaseFactory.once('upgraded', function (db) {
     assert.pass('db upgraded event');
-    assert.equal(dbName, db.name);
+    assert.equal(DB_NAME, db.name);
   });
-  DatabaseFactory.open(dbName).then(function (db) {
-    var request = indexedDB.open(db.name, db.version);
-    request.onsuccess = function (event) {
+  DatabaseFactory.open(DB_NAME).then(function (db) {
+    let request = indexedDB.open(db.name, db.version);
+    request.onsuccess = ({ target : { result }}) => {
       assert.pass('db exists');
-      assert.equal(event.target.result.name, db.name,
+      assert.equal(result.name, db.name,
                    "db name is not the same");
-      event.target.result.close();
+      result.close();
       done();
     };
-    request.onerror = function (event) {
-      assert.fail('failed to open db');
-    };
-    request.addEventListener("upgradeneeded", function upgradeneeded(event) {
-      assert.fail('no upgrade should be needed');
-    });
+    request.onerror = () => assert.fail('failed to open db');
+    request.addEventListener("upgradeneeded", () => assert.fail('no upgrade should be needed'));
   });
 };
 
-exports['test deletedb'] = function (assert, done) {
-  var dbName = "test2";
-  DatabaseFactory.once('deleted', function (name) {
-    assert.pass('db deleted event');
-    assert.equal(dbName, name);
-  });
-  DatabaseFactory.open(dbName).then(function (db) {
-    DatabaseFactory.deleteDatabase(db.name).then(function (deldb) {
-      var request = indexedDB.open(deldb.name, 1);
-      request.onsuccess = function (event) {
-        assert.pass('db exists eventually');
-      };
-      request.addEventListener("upgradeneeded", function (event) {
+exports['test 002 next open and delete db'] = function (assert, done) {
+  let fail = (error) => {
+    assert.fail(error);
+    done();
+  };
+
+  let cleanup = (name) => {
+    let request = indexedDB.deleteDatabase(name);
+    request.addEventListener("success", () => {
+      assert.pass('deleted db on cleanup');
+      done();
+    });
+    request.addEventListener("error", ({target : { error }}) => fail(error));
+  };
+
+  DatabaseFactory.once('deleted', (name) => assert.equal(DB_NAME, name));
+  DatabaseFactory.open(DB_NAME).then((db) => {
+    DatabaseFactory.deleteDatabase(db.name).then((deldb) => {
+      let request = indexedDB.open(deldb.name, 1);
+      request.addEventListener("success", () => assert.pass('db exists eventually'));
+      request.addEventListener("upgradeneeded", ({ target : { result }}) => {
         assert.pass('upgrade needed because this db did not exist before');
-        event.target.result.close();
-        done();
+        result.close();
+        cleanup(deldb.name);
       });
-      request.onerror = function (event) {
-        assert.fail('failed to open deleted db');
-      };
-    });
-  });
+      request.addEventListener("error", ({target : { error }}) => fail(error));
+    },fail);
+  }, fail);
 
 };
 
-exports['test open high version db'] = function (assert, done) {
-  var dbName = "test4",
-      version = 10;
-  var request = indexedDB.open(dbName, version);
-  request.onsuccess = function (event) {
-    assert.pass('db created ' + event.target.result.version);
-    event.target.result.close();
-    DatabaseFactory.open(dbName).then(function (db) {
+exports['test 003 open high version db'] = function (assert, done) {
+  let fail = (error) => {
+    assert.fail(error);
+    done();
+  };
+  let version = 10;
+  let request = indexedDB.open(DB_NAME, version);
+  request.addEventListener("success", ({ target : { result }}) => {
+    console.dir(result);
+    assert.pass('db created ' + result.version, result.name);
+    result.close();
+    DatabaseFactory.open(DB_NAME).then((db) => {
+      console.dir(db);
       assert.equal(version, db.version,
                    "We didn't open the db to the correct version");
       done();
-    }, assert.fail);
-  };
-  request.onerror = function (event) {
-    assert.fail('failed to open db');
-  };
-  request.addEventListener("upgradeneeded", function (event) {
-    //assert.fail('no upgrade should be needed');
+    }, fail);
+  });
+  request.addEventListener("error", ({target : { error }}) => fail(error));
+  request.addEventListener("upgradeneeded", ({target : { result : db }}) => {
+    console.dir(db);
+    assert.equal(version, db.version, "should be coming from a different version number");
   });
 };
 
