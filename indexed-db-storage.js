@@ -5,7 +5,7 @@
 /* jshint strict: true, esnext: true, newcap: false, globalstrict: true,
    devel: true, node: true */
 
-"use strict";
+'use strict';
 
 const { indexedDB } = require('sdk/indexed-db');
 const { EventTarget } = require('sdk/event/target');
@@ -15,6 +15,7 @@ const { ensure } = require('sdk/system/unload');
 const { defer } = require('sdk/core/promise');
 
 const { Database } = require('./db/database');
+const { logDomError } = require('./db/utils');
 
 // This class maps to an IDBFactory
 // https://developer.mozilla.org/en-US/docs/IndexedDB/IDBFactory
@@ -32,17 +33,17 @@ var DatabaseFactory = Class({
       if (item.name === name) {
         db = item;
         break;
-      }      
+      }
     }
     return db;
   },
   close : function close(db) {
-    if (typeof db === "string") {
+    if (typeof db === 'string') {
       db = this._find(db);
     }
     if (db !== null) {
       this.connections.delete(db);
-      db.close();    
+      db.close();
     }
     return (db instanceof Database);
   },
@@ -60,26 +61,26 @@ var DatabaseFactory = Class({
 
     let request = indexedDB.open(name, version);
 
-    request.addEventListener("success", ({ target : { result : db }}) => {
+    request.addEventListener('success', ({ target : { result : db }}) => {
       let storage = new Database(db);
       this.connections.add(storage);
-      emit(this, "opened", storage);
+      emit(this, 'opened', storage);
       resolve(storage);
     });
-    request.addEventListener("error", event => {
-      if (event.target.error.name === "VersionError") {
+    request.addEventListener('error', event => {
+      if (event.target.error.name === 'VersionError') {
         version += 1;
-        emit(this, "version", name, version);
+        emit(this, 'version', name, version);
         resolve(this._open(name, version));
       } else {
         logDomError(event);
         reject(event);
       }
     });
-    request.addEventListener("upgradeneeded", ({ target : { result : db }}) => {
+    request.addEventListener('upgradeneeded', ({ target : { result : db }}) => {
       let storage = new Database(db);
       this.connections.add(storage);
-      emit(this, "upgraded", storage);
+      emit(this, 'upgraded', storage);
       resolve(storage);
     });
     return promise;
@@ -89,12 +90,12 @@ var DatabaseFactory = Class({
 
     let found = this.close(name);
     let request = indexedDB.deleteDatabase(name);
-    request.addEventListener("success", () => {
-      emit(this, "deleted", name);
+    request.addEventListener('success', () => {
+      emit(this, 'deleted', name);
       resolve(this);
     });
-    request.addEventListener("error", ({target : { error }}) => reject(error));
-    request.addEventListener("blocked", ({target : { error }}) => reject(error));
+    request.addEventListener('error', ({target : { error }}) => reject(error));
+    request.addEventListener('blocked', ({target : { error }}) => reject(error));
 
     if (!found) {
       reject(name);

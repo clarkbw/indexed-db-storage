@@ -7,6 +7,12 @@
     "id": "jid1-11ORdlqucIDuBA@clarkbw.net",
     "description": "Promise base API for Mozilla SDK add-ons to use IndexedDB",
     "main" : "./indexed-db-storage",
+    "scripts": {
+      "start": "jpm run -b nightly",
+      "pretest": "jscs . && jshint .",
+      "test": "jpm test -b nightly",
+      "outdated": "npm outdated --depth=0"
+    },
     "repository": {
       "type": "git",
       "url": "https://github.com/clarkbw/indexed-db-storage.git"

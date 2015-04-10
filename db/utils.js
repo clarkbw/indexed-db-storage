@@ -5,34 +5,34 @@
 /* jshint strict: true, esnext: true, newcap: false, globalstrict: true,
    devel: true, node: true */
 
-"use strict";
+'use strict';
 
 // https://mxr.mozilla.org/
 // mozilla-central/source/dom/indexedDB/IDBDatabase.cpp#606
-exports.READ_ONLY = "readonly";
-exports.READ_WRITE = "readwrite";
-exports.VERSION_CHANGE = "versionchange";
+exports.READ_ONLY = 'readonly';
+exports.READ_WRITE = 'readwrite';
+exports.VERSION_CHANGE = 'versionchange';
 
 exports.logDomError = function logDomError(event) {
-  console.log("_onerror", event);
+  console.log('_onerror', event);
   switch (event.target.error.name) {
-  case "VersionError":
-    console.log("DOMException.VersionError");
+  case 'VersionError':
+    console.log('DOMException.VersionError');
     break;
-  case "AbortError":
-    console.log("DOMException.AbortError");
+  case 'AbortError':
+    console.log('DOMException.AbortError');
     break;
-  case "ConstraintError":
-    console.log("DOMException.ConstraintError");
+  case 'ConstraintError':
+    console.log('DOMException.ConstraintError');
     break;
-  case "QuotaExceededError":
-    console.log("DOMException.QuotaExceededError");
+  case 'QuotaExceededError':
+    console.log('DOMException.QuotaExceededError');
     break;
-  case "UnknownError":
-    console.log("DOMException.UnknownError");
+  case 'UnknownError':
+    console.log('DOMException.UnknownError');
     break;
-  case "NoError":
-    console.log("DOMException.NoError");
+  case 'NoError':
+    console.log('DOMException.NoError');
     break;
   }
 };
