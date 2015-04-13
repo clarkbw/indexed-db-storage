@@ -1,24 +1,24 @@
 {
-    "name": "indexed-db-storage",
-    "license": "MPL 2.0",
-    "author": "Bryan Clark (http://clarkbw.net/) <clarkbw@gmail.com>",
-    "version": "0.1.2",
-    "fullName": "IndexedDB Storage Promise API",
-    "id": "jid1-11ORdlqucIDuBA@clarkbw.net",
-    "description": "Promise base API for Mozilla SDK add-ons to use IndexedDB",
-    "main" : "./indexed-db-storage",
-    "scripts": {
-      "start": "jpm run -b nightly",
-      "pretest": "jscs . && jshint .",
-      "test": "jpm test -b nightly",
-      "outdated": "npm outdated --depth=0"
-    },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/clarkbw/indexed-db-storage.git"
-    },
-    "bugs": {
-        "url": "https://github.com/clarkbw/indexed-db-storage/issues"
-    },
-    "homepage": "https://github.com/clarkbw/indexed-db-storage"
+  "name": "indexed-db-storage",
+  "license": "MPL 2.0",
+  "author": "Bryan Clark (http://clarkbw.net/) <clarkbw@gmail.com>",
+  "version": "0.2.0",
+  "fullName": "IndexedDB Storage Promise API",
+  "id": "jid1-11ORdlqucIDuBA@clarkbw.net",
+  "description": "Promise base API for Mozilla SDK add-ons to use IndexedDB",
+  "main": "./indexed-db-storage",
+  "scripts": {
+    "start": "jpm run -b nightly",
+    "pretest": "jscs . && jshint .",
+    "test": "jpm test -b nightly",
+    "outdated": "npm outdated --depth=0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clarkbw/indexed-db-storage.git"
+  },
+  "bugs": {
+    "url": "https://github.com/clarkbw/indexed-db-storage/issues"
+  },
+  "homepage": "https://github.com/clarkbw/indexed-db-storage"
 }
