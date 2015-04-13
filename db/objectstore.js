@@ -11,6 +11,7 @@ const { EventTarget } = require('sdk/event/target');
 const { emit } = require('sdk/event/core');
 const { Class } = require('sdk/core/heritage');
 const { defer } = require('sdk/core/promise');
+const { IDBKeyRange } = require('sdk/indexed-db');
 
 const namespace = require('sdk/core/namespace').ns();
 
@@ -109,6 +110,42 @@ var ObjectStore = Class({
       try {
         let request = store.get(key);
         request.addEventListener('success', ({ target : { result }}) => item = result);
+        request.addEventListener('error', ({ target : { error }}) => reject(error));
+      } catch (requestException) { // request
+        reject(requestException.name);
+      }
+
+    } catch (transactionException) { // transaction
+      reject(transactionException.name);
+    }
+
+    return promise;
+  },
+  find : function find(term) {
+    let { promise, resolve, reject } = defer();
+
+    let reserved = 'continue';
+    let items = [];
+
+    try {
+      let transaction = this._db.transaction(this.name, READ_ONLY);
+      let store = transaction.objectStore(this.name);
+
+      transaction.addEventListener('complete', () => {
+        emit(this, 'all', items);
+        resolve(items);
+      });
+      transaction.addEventListener('abort', () => reject(this));
+      transaction.addEventListener('error', () => reject(this));
+
+      try {
+        let request = store.openCursor(IDBKeyRange.bound(term, term + '\uffff'), 'prev');
+        request.addEventListener('success', ({ target : { result : cursor }}) => {
+          if (cursor) {
+            items.push(cursor.value);
+            cursor[reserved]();
+          }
+        });
         request.addEventListener('error', ({ target : { error }}) => reject(error));
       } catch (requestException) { // request
         reject(requestException.name);
