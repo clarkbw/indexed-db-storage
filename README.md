@@ -1,4 +1,6 @@
 # indexed-db-storage 
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/clarkbw/indexed-db-storage.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/clarkbw/indexed-db-storage.png)](https://travis-ci.org/clarkbw/indexed-db-storage)
 
 [![NPM](https://nodei.co/npm/indexed-db-storage.png?stars&downloads)](https://nodei.co/npm/indexed-db-storage/)
